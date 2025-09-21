@@ -1,193 +1,193 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Header from '../../components/ui/Header';
-import Icon from '../../components/AppIcon';
-import Input from '../../components/ui/Input';
-import Button from '../../components/ui/Button';
-import ImageUploadSection from './components/ImageUploadSection';
-import ProductDescriptionEditor from './components/ProductDescriptionEditor';
-import CategorySelector from './components/CategorySelector';
-import PriceInput from './components/PriceInput';
-import ConditionSelector from './components/ConditionSelector';
-import ContactPreferences from './components/ContactPreferences';
-import ListingPreview from './components/ListingPreview';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import Header from "../../components/ui/Header";
+import Icon from "../../components/AppIcon";
+import Input from "../../components/ui/Input";
+import Button from "../../components/ui/Button";
+import ImageUploadSection from "./components/ImageUploadSection";
+import ProductDescriptionEditor from "./components/ProductDescriptionEditor";
+import CategorySelector from "./components/CategorySelector";
+import PriceInput from "./components/PriceInput";
+import ConditionSelector from "./components/ConditionSelector";
+import ContactPreferences from "./components/ContactPreferences";
+import ListingPreview from "./components/ListingPreview";
+import { supabase } from "../../lib/supabase";
 
 const AddProductListing = () => {
   const navigate = useNavigate();
+
+  // Fake logged-in user (replace with real auth later)
   const [isAuthenticated, setIsAuthenticated] = useState(true);
   const [currentUser, setCurrentUser] = useState({
-    id: '1',
-    name: 'John Doe',
-    email: 'john.doe@iitism.ac.in',
-    studentId: 'STU123456',
-    university: 'IIT ISM Dhanbad'
+    id: "1", // ⚠️ replace with UUID from Supabase auth.users
+    name: "John Doe",
+    email: "john.doe@iitism.ac.in",
+    studentId: "STU123456",
+    university: "IIT ISM Dhanbad",
   });
 
   const [formData, setFormData] = useState({
-    title: '',
-    category: '',
-    price: '',
-    condition: '',
-    description: '',
+    title: "",
+    category: "",
+    price: "",
+    condition: "",
+    description: "",
     images: [],
     contactPreferences: {
       email: true,
       whatsapp: false,
-      phone: false
-    }
+      phone: false,
+    },
   });
 
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [isDraft, setIsDraft] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
-  const [autoSaveStatus, setAutoSaveStatus] = useState('');
+  const [autoSaveStatus, setAutoSaveStatus] = useState("");
 
-  // Auto-save functionality
+  // Auto-save draft
   useEffect(() => {
     const autoSaveTimer = setTimeout(() => {
-      if (formData?.title || formData?.description) {
-        localStorage.setItem('draft-listing', JSON.stringify(formData));
-        setAutoSaveStatus('Draft saved');
-        setTimeout(() => setAutoSaveStatus(''), 2000);
+      if (formData.title || formData.description) {
+        localStorage.setItem("draft-listing", JSON.stringify(formData));
+        setAutoSaveStatus("Draft saved");
+        setTimeout(() => setAutoSaveStatus(""), 2000);
       }
     }, 3000);
 
     return () => clearTimeout(autoSaveTimer);
   }, [formData]);
 
-  // Load draft on component mount
+  // Load draft
   useEffect(() => {
-    const savedDraft = localStorage.getItem('draft-listing');
+    const savedDraft = localStorage.getItem("draft-listing");
     if (savedDraft) {
       try {
         const draftData = JSON.parse(savedDraft);
-        setFormData(prev => ({ ...prev, ...draftData }));
+        setFormData((prev) => ({ ...prev, ...draftData }));
         setIsDraft(true);
       } catch (error) {
-        console.error('Error loading draft:', error);
+        console.error("Error loading draft:", error);
       }
     }
   }, []);
 
+  // Handle input change
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
 
-    // Clear error when user starts typing
-    if (errors?.[field]) {
-      setErrors(prev => ({
+    if (errors[field]) {
+      setErrors((prev) => ({
         ...prev,
-        [field]: ''
+        [field]: "",
       }));
     }
   };
 
+  // Validation
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData?.title?.trim()) {
-      newErrors.title = 'Product title is required';
-    } else if (formData?.title?.length < 10) {
-      newErrors.title = 'Title must be at least 10 characters';
-    } else if (formData?.title?.length > 100) {
-      newErrors.title = 'Title must be less than 100 characters';
+    if (!formData.title.trim()) {
+      newErrors.title = "Product title is required";
+    } else if (formData.title.length < 10) {
+      newErrors.title = "Title must be at least 10 characters";
     }
 
-    if (!formData?.category) {
-      newErrors.category = 'Please select a category';
+    if (!formData.category) {
+      newErrors.category = "Please select a category";
     }
 
-    if (!formData?.price) {
-      newErrors.price = 'Price is required';
-    } else if (formData?.price <= 0) {
-      newErrors.price = 'Price must be greater than 0';
-    } else if (formData?.price > 1000000) {
-      newErrors.price = 'Price seems too high for campus marketplace';
+    if (!formData.price) {
+      newErrors.price = "Price is required";
+    } else if (Number(formData.price) <= 0) {
+      newErrors.price = "Price must be greater than 0";
     }
 
-    if (!formData?.condition) {
-      newErrors.condition = 'Please select item condition';
+    if (!formData.condition) {
+      newErrors.condition = "Please select item condition";
     }
 
-    if (!formData?.description?.trim()) {
-      newErrors.description = 'Product description is required';
-    } else if (formData?.description?.length < 50) {
-      newErrors.description = 'Description must be at least 50 characters';
+    if (!formData.description.trim()) {
+      newErrors.description = "Product description is required";
+    } else if (formData.description.length < 50) {
+      newErrors.description = "Description must be at least 50 characters";
     }
 
-    if (!formData?.images || formData?.images?.length === 0) {
-      newErrors.images = 'At least one product image is required';
+    if (!formData.images || formData.images.length === 0) {
+      newErrors.images = "At least one product image is required";
     }
 
-    const hasContactMethod = Object.values(formData?.contactPreferences)?.some(Boolean);
-    if (!hasContactMethod) {
-      newErrors.contactPreferences = 'Please select at least one contact method';
+    if (!Object.values(formData.contactPreferences).some(Boolean)) {
+      newErrors.contactPreferences = "Select at least one contact method";
     }
 
     setErrors(newErrors);
-    return Object.keys(newErrors)?.length === 0;
+    return Object.keys(newErrors).length === 0;
   };
 
+  // Submit
   const handleSubmit = async (e) => {
-    e?.preventDefault();
-    
-    if (!validateForm()) {
-      // Scroll to first error
-      const firstErrorField = document.querySelector('.text-error');
-      if (firstErrorField) {
-        firstErrorField?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-      return;
-    }
+    e.preventDefault();
+
+    if (!validateForm()) return;
 
     setIsLoading(true);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const { data, error } = await supabase.from("products").insert([
+        {
+          seller_id: currentUser.id, // must be valid UUID in your DB
+          title: formData.title.trim(),
+          description: formData.description.trim(),
+          category: formData.category,
+          condition: formData.condition,
+          price: Number(formData.price),
+          images: formData.images,
+          contact_preferences: formData.contactPreferences,
+          created_at: new Date().toISOString(),
+        },
+      ]);
 
-      // Clear draft from localStorage
-      localStorage.removeItem('draft-listing');
+      if (error) throw error;
 
-      // Navigate to success page or product details
-      navigate('/homepage', { 
-        state: { 
-          message: 'Your listing has been published successfully!',
-          type: 'success'
-        }
+      localStorage.removeItem("draft-listing");
+
+      navigate("/homepage", {
+        state: {
+          message: "Your listing has been published successfully!",
+          type: "success",
+        },
       });
-
-    } catch (error) {
-      setErrors({ submit: 'Failed to publish listing. Please try again.' });
+    } catch (err) {
+      console.error("Error publishing:", err);
+      setErrors({ submit: "Failed to publish listing. Try again." });
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleSaveDraft = () => {
-    localStorage.setItem('draft-listing', JSON.stringify(formData));
+    localStorage.setItem("draft-listing", JSON.stringify(formData));
     setIsDraft(true);
-    setAutoSaveStatus('Draft saved manually');
-    setTimeout(() => setAutoSaveStatus(''), 2000);
+    setAutoSaveStatus("Draft saved manually");
+    setTimeout(() => setAutoSaveStatus(""), 2000);
   };
 
   const handleClearDraft = () => {
-    localStorage.removeItem('draft-listing');
+    localStorage.removeItem("draft-listing");
     setFormData({
-      title: '',
-      category: '',
-      price: '',
-      condition: '',
-      description: '',
+      title: "",
+      category: "",
+      price: "",
+      condition: "",
+      description: "",
       images: [],
-      contactPreferences: {
-        email: true,
-        whatsapp: false,
-        phone: false
-      }
+      contactPreferences: { email: true, whatsapp: false, phone: false },
     });
     setIsDraft(false);
     setErrors({});
@@ -200,7 +200,7 @@ const AddProductListing = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header 
+      <Header
         isAuthenticated={isAuthenticated}
         currentUser={currentUser}
         onAuthStateChange={handleAuthStateChange}
@@ -211,7 +211,7 @@ const AddProductListing = () => {
           <div className="mb-8">
             <div className="flex items-center space-x-2 text-sm text-muted-foreground mb-4">
               <button
-                onClick={() => navigate('/homepage')}
+                onClick={() => navigate("/homepage")}
                 className="hover:text-foreground transition-smooth"
               >
                 Home
@@ -230,7 +230,6 @@ const AddProductListing = () => {
                 </p>
               </div>
 
-              {/* Auto-save Status */}
               {autoSaveStatus && (
                 <div className="flex items-center space-x-2 text-sm text-success">
                   <Icon name="Check" size={16} />
@@ -239,17 +238,21 @@ const AddProductListing = () => {
               )}
             </div>
 
-            {/* Draft Notice */}
             {isDraft && (
               <div className="mt-4 bg-accent/10 border border-accent/20 rounded-lg p-4">
                 <div className="flex items-start space-x-3">
-                  <Icon name="FileText" size={20} className="text-accent mt-0.5" />
+                  <Icon
+                    name="FileText"
+                    size={20}
+                    className="text-accent mt-0.5"
+                  />
                   <div className="flex-1">
                     <p className="text-sm font-medium text-accent">
                       Draft Loaded
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Your previous work has been restored. Continue editing or start fresh.
+                      Your previous work has been restored. Continue editing or
+                      start fresh.
                     </p>
                   </div>
                   <Button
@@ -267,11 +270,11 @@ const AddProductListing = () => {
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-8">
-            {errors?.submit && (
+            {errors.submit && (
               <div className="bg-error/10 border border-error/20 rounded-lg p-4">
                 <div className="flex items-center space-x-2">
                   <Icon name="AlertCircle" size={20} className="text-error" />
-                  <p className="text-error">{errors?.submit}</p>
+                  <p className="text-error">{errors.submit}</p>
                 </div>
               </div>
             )}
@@ -284,37 +287,43 @@ const AddProductListing = () => {
                   <h2 className="text-lg font-semibold text-foreground mb-4">
                     Basic Information
                   </h2>
-                  
+
                   <div className="space-y-4">
                     <Input
                       label="Product Title"
                       type="text"
-                      value={formData?.title}
-                      onChange={(e) => handleInputChange('title', e?.target?.value)}
+                      value={formData.title}
+                      onChange={(e) =>
+                        handleInputChange("title", e.target.value)
+                      }
                       placeholder="e.g., iPhone 13 Pro Max 256GB Space Gray"
-                      error={errors?.title}
+                      error={errors.title}
                       required
-                      description="Be specific and descriptive (10-100 characters)"
+                      description="Be specific and descriptive (10+ characters)"
                     />
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <CategorySelector
-                        value={formData?.category}
-                        onChange={(value) => handleInputChange('category', value)}
-                        error={errors?.category}
+                        value={formData.category}
+                        onChange={(value) =>
+                          handleInputChange("category", value)
+                        }
+                        error={errors.category}
                       />
 
                       <ConditionSelector
-                        value={formData?.condition}
-                        onChange={(value) => handleInputChange('condition', value)}
-                        error={errors?.condition}
+                        value={formData.condition}
+                        onChange={(value) =>
+                          handleInputChange("condition", value)
+                        }
+                        error={errors.condition}
                       />
                     </div>
 
                     <PriceInput
-                      value={formData?.price}
-                      onChange={(value) => handleInputChange('price', value)}
-                      error={errors?.price}
+                      value={formData.price}
+                      onChange={(value) => handleInputChange("price", value)}
+                      error={errors.price}
                     />
                   </div>
                 </div>
@@ -324,11 +333,10 @@ const AddProductListing = () => {
                   <h2 className="text-lg font-semibold text-foreground mb-4">
                     Product Images
                   </h2>
-                  
                   <ImageUploadSection
-                    images={formData?.images}
-                    onImagesChange={(images) => handleInputChange('images', images)}
-                    error={errors?.images}
+                    images={formData.images}
+                    onImagesChange={(imgs) => handleInputChange("images", imgs)}
+                    error={errors.images}
                   />
                 </div>
 
@@ -337,34 +345,35 @@ const AddProductListing = () => {
                   <h2 className="text-lg font-semibold text-foreground mb-4">
                     Product Description
                   </h2>
-                  
                   <ProductDescriptionEditor
-                    value={formData?.description}
-                    onChange={(value) => handleInputChange('description', value)}
-                    error={errors?.description}
+                    value={formData.description}
+                    onChange={(val) => handleInputChange("description", val)}
+                    error={errors.description}
                   />
                 </div>
               </div>
 
               {/* Sidebar */}
               <div className="space-y-6">
-                {/* Contact Preferences */}
                 <div className="bg-card rounded-lg border border-border p-6">
                   <ContactPreferences
-                    preferences={formData?.contactPreferences}
-                    onChange={(preferences) => handleInputChange('contactPreferences', preferences)}
+                    preferences={formData.contactPreferences}
+                    onChange={(prefs) =>
+                      handleInputChange("contactPreferences", prefs)
+                    }
                   />
-                  {errors?.contactPreferences && (
-                    <p className="text-sm text-error mt-2">{errors?.contactPreferences}</p>
+                  {errors.contactPreferences && (
+                    <p className="text-sm text-error mt-2">
+                      {errors.contactPreferences}
+                    </p>
                   )}
                 </div>
 
-                {/* Actions */}
                 <div className="bg-card rounded-lg border border-border p-6">
                   <h3 className="text-sm font-semibold text-foreground mb-4">
                     Listing Actions
                   </h3>
-                  
+
                   <div className="space-y-3">
                     <Button
                       type="button"
@@ -373,7 +382,7 @@ const AddProductListing = () => {
                       onClick={() => setShowPreview(true)}
                       iconName="Eye"
                       iconPosition="left"
-                      disabled={!formData?.title && !formData?.description}
+                      disabled={!formData.title && !formData.description}
                     >
                       Preview Listing
                     </Button>
@@ -397,34 +406,25 @@ const AddProductListing = () => {
                       iconName="Upload"
                       iconPosition="left"
                     >
-                      {isLoading ? 'Publishing...' : 'Publish Listing'}
+                      {isLoading ? "Publishing..." : "Publish Listing"}
                     </Button>
-                  </div>
-
-                  <div className="mt-4 pt-4 border-t border-border">
-                    <div className="text-xs text-muted-foreground space-y-1">
-                      <p>📋 <strong>Before publishing:</strong></p>
-                      <ul className="list-disc list-inside space-y-1 ml-2">
-                        <li>Double-check all information</li>
-                        <li>Ensure images are clear and well-lit</li>
-                        <li>Price competitively for quick sale</li>
-                        <li>Be honest about item condition</li>
-                      </ul>
-                    </div>
                   </div>
                 </div>
 
-                {/* Guidelines */}
                 <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
                   <div className="flex items-start space-x-2">
-                    <Icon name="Info" size={16} className="text-primary mt-0.5" />
+                    <Icon
+                      name="Info"
+                      size={16}
+                      className="text-primary mt-0.5"
+                    />
                     <div className="text-xs text-primary">
                       <p className="font-medium mb-1">Listing Guidelines</p>
                       <ul className="space-y-1">
                         <li>• Only sell items you own</li>
-                        <li>• No prohibited items (weapons, etc.)</li>
-                        <li>• Meet in safe, public campus locations</li>
-                        <li>• Be responsive to buyer inquiries</li>
+                        <li>• No prohibited items</li>
+                        <li>• Meet in safe public campus locations</li>
+                        <li>• Be honest about condition</li>
                       </ul>
                     </div>
                   </div>
@@ -434,6 +434,7 @@ const AddProductListing = () => {
           </form>
         </div>
       </main>
+
       {/* Preview Modal */}
       <ListingPreview
         formData={formData}

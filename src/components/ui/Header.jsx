@@ -5,13 +5,17 @@ import Button from './Button';
 import Input from './Input';
 import AuthenticationModal from './AuthenticationModal';
 import UserAccountDropdown from './UserAccountDropdown';
-import { useAuth } from '../auth';
+// import { useAuth } from '../auth';
+import { useAuth } from '../../contexts/AuthContext';
+
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const navigate = useNavigate();
-  const { user, signOut, userProfile } = useAuth(); // Use Supabase auth
+  // const { user, signOut, userProfile } = useAuth(); // Use Supabase auth
+  const auth = useAuth();
+  const { user, signOut, userProfile } = auth || {};
 
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');

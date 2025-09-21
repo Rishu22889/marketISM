@@ -10,6 +10,7 @@ const ProductCard = ({ product, onWishlistToggle, isWishlisted = false }) => {
 
   const handleCardClick = () => {
     navigate(`/product-details?id=${product?.id}`);
+    console.log(product?.id);
   };
 
   const handleWishlistClick = (e) => {
@@ -64,7 +65,8 @@ const ProductCard = ({ product, onWishlistToggle, isWishlisted = false }) => {
       className="bg-card rounded-xl border border-border hover:shadow-elevation-2 transition-smooth cursor-pointer group overflow-hidden"
     >
       {/* Image Section */}
-      <div className="relative aspect-[4/3] overflow-hidden">
+      <div className="relative aspect-[4/3] overflow-hidden"
+       onClick={handleCardClick}>
         <Image
           src={product?.images?.[0]}
           alt={product?.title}

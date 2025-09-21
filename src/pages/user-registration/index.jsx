@@ -104,14 +104,14 @@ const UserRegistration = () => {
               <div className="hidden lg:block">
                 <div className="relative rounded-lg overflow-hidden shadow-elevation-2">
                   <Image
-                    src="https://images.unsplash.com/photo-1562774053-701939374585?w=600&h=400&fit=crop"
+                    src="https://www.iitism.ac.in/images/iitism_banner_new.gif?w=600&h=400&fit=crop"
                     alt="IIT ISM Campus"
                     className="w-full h-64 object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
                   <div className="absolute bottom-4 left-4 text-white">
-                    <p className="text-sm font-medium">IIT (ISM) Dhanbad Campus</p>
-                    <p className="text-xs opacity-90">Your trusted marketplace community</p>
+                    {/* <p className="text-sm font-medium">IIT (ISM) Dhanbad Campus</p>
+                    <p className="text-xs opacity-90">Your trusted marketplace community</p> */}
                   </div>
                 </div>
               </div>
